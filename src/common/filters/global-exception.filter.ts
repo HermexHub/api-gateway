@@ -7,6 +7,11 @@ import {
 	Logger
 } from '@nestjs/common'
 import { Request, Response } from 'express'
+import {
+	getGrpcStatusName,
+	grpcStatusToHttpStatus,
+	isGrpcError
+} from '@hermex/contracts'
 import { X_CORRELATION_ID } from '../constants/headers.constant'
 
 @Catch()
@@ -38,6 +43,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 				message = res
 				errorName = exception.name
 			}
+		} else if (isGrpcError(exception)) {
+			status = grpcStatusToHttpStatus(exception.code)
+			message = exception.details || exception.message || 'gRPC error'
+			errorName = getGrpcStatusName(exception.code)
 		} else if (exception instanceof Error) {
 			message = exception.message
 			errorName = exception.name

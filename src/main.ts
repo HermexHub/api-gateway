@@ -47,6 +47,7 @@ async function bootstrap() {
 		.setVersion('1.0')
 		.addBearerAuth()
 		.addTag('Authentication', 'User registration, login, token refresh and logout')
+		.addTag('Orders', 'Order placement and tracking via gRPC Order Service')
 		.addTag('Health', 'Service health check and kubernetes probes')
 		.build()
 
@@ -60,7 +61,6 @@ async function bootstrap() {
 	await app.listen(port)
 	logger.log(`🚀 API Gateway is running on: http://localhost:${port}`)
 	logger.log(`📚 Swagger documentation: http://localhost:${port}/docs`)
-	logger.log(`🩺 Health check endpoint: http://localhost:${port}/health`)
 	logger.log(`🌍 Environment: ${nodeEnv}`)
 }
 

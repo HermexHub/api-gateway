@@ -56,6 +56,10 @@ export class EnvironmentVariables {
 	@IsString()
 	@IsNotEmpty({ message: 'JWT_REFRESH_EXPIRES_IN is required' })
 	JWT_REFRESH_EXPIRES_IN!: string
+
+	@IsString()
+	@IsNotEmpty({ message: 'ORDER_GRPC_URL is required' })
+	ORDER_GRPC_URL!: string
 }
 
 export function validateEnv(

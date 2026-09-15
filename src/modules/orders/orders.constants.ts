@@ -1,0 +1,1 @@
+export const ORDER_GRPC_CLIENT = 'ORDER_GRPC_CLIENT'
