@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware'
 import appConfig from './config/app.config'
 import databaseConfig from './config/database.config'
+import { validateEnv } from './config/env.validation'
 import { AuthModule } from './modules/auth/auth.module'
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard'
 import { HealthModule } from './modules/health/health.module'
@@ -13,6 +14,12 @@ import { HealthModule } from './modules/health/health.module'
 	imports: [
 		ConfigModule.forRoot({
 			isGlobal: true,
+			envFilePath: [
+				`.env.${process.env.NODE_ENV || 'development'}.local`,
+				`.env.${process.env.NODE_ENV || 'development'}`,
+				'.env'
+			],
+			validate: validateEnv,
 			load: [appConfig, databaseConfig]
 		}),
 		TypeOrmModule.forRootAsync({

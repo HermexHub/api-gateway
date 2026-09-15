@@ -14,17 +14,13 @@ export interface AppConfig {
 export default registerAs(
 	'app',
 	(): AppConfig => ({
-		port: parseInt(process.env.PORT || '4000', 10),
-		nodeEnv: process.env.NODE_ENV || 'development',
+		port: Number(process.env.PORT),
+		nodeEnv: process.env.NODE_ENV!,
 		jwt: {
-			accessSecret:
-				process.env.JWT_ACCESS_SECRET ||
-				'hermex-access-secret-key-change-in-prod',
-			accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
-			refreshSecret:
-				process.env.JWT_REFRESH_SECRET ||
-				'hermex-refresh-secret-key-change-in-prod',
-			refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d'
+			accessSecret: process.env.JWT_ACCESS_SECRET!,
+			accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN!,
+			refreshSecret: process.env.JWT_REFRESH_SECRET!,
+			refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN!
 		}
 	})
 )
