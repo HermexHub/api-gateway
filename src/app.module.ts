@@ -11,6 +11,7 @@ import { AuthModule } from './modules/auth/auth.module'
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard'
 import { HealthModule } from './modules/health/health.module'
 import { OrdersModule } from './modules/orders/orders.module'
+import { PaymentsModule } from './modules/payments/payments.module'
 
 @Module({
 	imports: [
@@ -30,7 +31,8 @@ import { OrdersModule } from './modules/orders/orders.module'
 		}),
 		AuthModule,
 		HealthModule,
-		OrdersModule
+		OrdersModule,
+		PaymentsModule
 	],
 	providers: [
 		{

@@ -1,12 +1,12 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import { ClientGrpc } from '@nestjs/microservices'
-import { Metadata } from '@grpc/grpc-js'
 import { firstValueFrom } from 'rxjs'
 import {
 	CreateOrderResponse,
 	GetOrderResponse,
 	ORDER_SERVICE_NAME
 } from '@hermex/contracts'
+import { createGrpcMetadata } from '@hermex/core'
 import { CreateOrderDto } from './dto/create-order.dto'
 import { ORDER_GRPC_CLIENT } from './orders.constants'
 import { OrderGrpcServiceClient } from './orders.interface'
@@ -30,11 +30,6 @@ export class OrdersService implements OnModuleInit {
 		dto: CreateOrderDto,
 		correlationId: string
 	): Promise<CreateOrderResponse> {
-		const metadata = new Metadata()
-		if (correlationId) {
-			metadata.set('x-correlation-id', correlationId)
-		}
-
 		return firstValueFrom(
 			this.orderGrpcService.createOrder(
 				{
@@ -42,7 +37,7 @@ export class OrdersService implements OnModuleInit {
 					items: dto.items,
 					deliveryAddress: dto.deliveryAddress
 				},
-				metadata
+				createGrpcMetadata(correlationId)
 			)
 		)
 	}
@@ -51,13 +46,12 @@ export class OrdersService implements OnModuleInit {
 		orderId: string,
 		correlationId: string
 	): Promise<GetOrderResponse> {
-		const metadata = new Metadata()
-		if (correlationId) {
-			metadata.set('x-correlation-id', correlationId)
-		}
-
 		return firstValueFrom(
-			this.orderGrpcService.getOrder({ orderId }, metadata)
+			this.orderGrpcService.getOrder(
+				{ orderId },
+				createGrpcMetadata(correlationId)
+			)
 		)
 	}
 }
+

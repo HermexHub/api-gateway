@@ -60,6 +60,10 @@ export class EnvironmentVariables {
 	@IsString()
 	@IsNotEmpty({ message: 'ORDER_GRPC_URL is required' })
 	ORDER_GRPC_URL!: string
+
+	@IsString()
+	@IsNotEmpty({ message: 'PAYMENT_GRPC_URL is required' })
+	PAYMENT_GRPC_URL!: string
 }
 
 export function validateEnv(
