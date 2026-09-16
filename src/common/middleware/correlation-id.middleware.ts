@@ -1,7 +1,7 @@
 import { Injectable, NestMiddleware } from '@nestjs/common'
 import { Request, Response, NextFunction } from 'express'
 import { v4 as uuidv4 } from 'uuid'
-import { X_CORRELATION_ID } from '@hermex/core'
+import { X_CORRELATION_ID, TraceContext } from '@hermex/core'
 
 declare global {
 	namespace Express {
@@ -24,6 +24,8 @@ export class CorrelationIdMiddleware implements NestMiddleware {
 		req.headers[X_CORRELATION_ID] = correlationId
 		res.setHeader(X_CORRELATION_ID, correlationId)
 
-		next()
+		TraceContext.run(correlationId, () => {
+			next()
+		})
 	}
 }

@@ -3,13 +3,18 @@ import { ConfigService } from '@nestjs/config'
 import { NestFactory } from '@nestjs/core'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import cookieParser from 'cookie-parser'
+import { HermexLogger } from '@hermex/core'
 import { AppModule } from './app.module'
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter'
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
 
 async function bootstrap() {
+	const hermexLogger = new HermexLogger({ serviceName: 'api-gateway' })
+	const app = await NestFactory.create(AppModule, {
+		logger: hermexLogger
+	})
+	app.useLogger(hermexLogger)
 	const logger = new Logger('Bootstrap')
-	const app = await NestFactory.create(AppModule)
 
 	const configService = app.get(ConfigService)
 	const port = configService.get<number>('app.port') || 4000
