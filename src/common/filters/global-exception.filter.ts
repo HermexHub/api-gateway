@@ -48,9 +48,11 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 			message = exception.details || exception.message || 'gRPC error'
 			errorName = getGrpcStatusName(exception.code)
 		} else if (exception instanceof Error) {
-			message = exception.message
-			errorName = exception.name
+			const isProduction = process.env.NODE_ENV === 'production'
+			message = isProduction ? 'Internal server error' : exception.message
+			errorName = 'InternalServerError'
 		}
+
 
 		this.logger.error(
 			`[${correlationId}] ${request.method} ${request.url} - ${status} ${errorName}: ${JSON.stringify(

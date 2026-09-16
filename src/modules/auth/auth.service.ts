@@ -18,6 +18,10 @@ import { RegisterDto } from './dto/register.dto'
 import { UserEntity } from './entities/user.entity'
 import { UserRepository } from './repositories/user.repository'
 
+// Precomputed dummy bcrypt hash (cost 10) to guarantee constant-time execution against timing attacks
+const DUMMY_HASH =
+	'$2a$10$e8kfv1234567890123456uABCDEFGHIJKLMNOPQRSTUVWXYZ012'
+
 @Injectable()
 export class AuthService {
 	constructor(
@@ -65,19 +69,15 @@ export class AuthService {
 		const normalizedEmail = dto.email.trim().toLowerCase()
 		const user = await this.userRepository.findByEmail(normalizedEmail)
 
-		if (!user) {
-			throw new UnauthorizedException('Invalid email or password')
-		}
-
-		if (!user.isActive) {
-			throw new UnauthorizedException('User account is deactivated')
-		}
-
+		// Constant-time execution: always compare password to prevent timing attacks / user enumeration
+		const hashToCompare = user ? user.passwordHash : DUMMY_HASH
 		const isPasswordValid = await bcrypt.compare(
 			dto.password,
-			user.passwordHash
+			hashToCompare
 		)
-		if (!isPasswordValid) {
+
+		// Uniform error: never leak whether email exists, password was wrong, or account is deactivated
+		if (!user || !isPasswordValid || !user.isActive) {
 			throw new UnauthorizedException('Invalid email or password')
 		}
 
@@ -100,7 +100,7 @@ export class AuthService {
 		res: Response
 	): Promise<AuthResponse> {
 		if (!refreshToken) {
-			throw new UnauthorizedException('Refresh token is required')
+			throw new UnauthorizedException('Invalid or expired refresh token')
 		}
 
 		try {
@@ -116,14 +116,14 @@ export class AuthService {
 				)
 
 			const user = await this.userRepository.findById(payload.sub)
-			if (!user || !user.isActive) {
-				throw new UnauthorizedException('User not found or inactive')
-			}
-
-			// Validate token version against DB (Revocation / Session Check)
-			if (user.tokenVersion !== payload.tokenVersion) {
+			// Uniform check: never leak whether user exists, is inactive, or version mismatch
+			if (
+				!user ||
+				!user.isActive ||
+				user.tokenVersion !== payload.tokenVersion
+			) {
 				throw new UnauthorizedException(
-					'Session expired or revoked'
+					'Invalid or expired refresh token'
 				)
 			}
 
@@ -142,6 +142,7 @@ export class AuthService {
 			throw new UnauthorizedException('Invalid or expired refresh token')
 		}
 	}
+
 
 	async logout(
 		refreshToken: string | undefined,
