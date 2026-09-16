@@ -9,6 +9,7 @@ import {
 import { Request, Response } from 'express'
 import { v4 as uuidv4 } from 'uuid'
 import {
+	GrpcStatusCode,
 	getGrpcStatusName,
 	grpcStatusToHttpStatus,
 	isGrpcError
@@ -36,6 +37,9 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 		let message: string | object = 'Internal server error'
 		let errorName = 'InternalServerError'
 
+		// Raw error details preserved exclusively for internal server logging
+		let internalLogDetails: string | object = ''
+
 		if (exception instanceof HttpException) {
 			status = exception.getStatus()
 			const res = exception.getResponse()
@@ -47,19 +51,47 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 				message = res
 				errorName = exception.name
 			}
+			internalLogDetails = message
 		} else if (isGrpcError(exception)) {
 			status = grpcStatusToHttpStatus(exception.code)
-			message = exception.details || exception.message || 'gRPC error'
 			errorName = getGrpcStatusName(exception.code)
+
+			const rawDetails = exception.details || exception.message || 'gRPC error'
+			internalLogDetails = rawDetails
+
+			// AppSec CWE-209 Contract-Driven Error Masking:
+			// Infrastructure/Transport errors (5xx) must never leak raw driver/socket details.
+			// Domain/Application errors (4xx) safely return the intentional business message.
+			switch (exception.code) {
+				case GrpcStatusCode.UNAVAILABLE:
+					message =
+						'The requested service is temporarily unavailable. Please try again later.'
+					break
+				case GrpcStatusCode.DEADLINE_EXCEEDED:
+					message =
+						'Request to internal service timed out. Please try again later.'
+					break
+				default:
+					if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
+						message = 'Internal server error'
+					} else {
+						message = rawDetails
+					}
+					break
+			}
 		} else if (exception instanceof Error) {
+			internalLogDetails = exception.message
+			errorName = 'InternalServerError'
+
 			const isProduction = process.env.NODE_ENV === 'production'
 			message = isProduction ? 'Internal server error' : exception.message
-			errorName = 'InternalServerError'
+		} else {
+			internalLogDetails = String(exception)
 		}
 
 		// Status-aware logging: 5xx = error with stack trace; 4xx = warn/debug without stack trace
 		const logMessage = `[${correlationId}] ${request.method} ${request.url} - ${status} ${errorName}: ${JSON.stringify(
-			message
+			internalLogDetails || message
 		)}`
 
 		if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
