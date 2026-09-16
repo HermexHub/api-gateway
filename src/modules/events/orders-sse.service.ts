@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common'
 import { Observable, ReplaySubject, Subject } from 'rxjs'
 import { finalize } from 'rxjs/operators'
+import { MetricsService } from '../metrics/metrics.service'
 import { OrdersService } from '../orders/orders.service'
 import { OrderLiveEvent } from './interfaces/order-live-event.interface'
 
@@ -22,7 +23,8 @@ export class OrdersSseService {
 
 	constructor(
 		@Inject(forwardRef(() => OrdersService))
-		private readonly ordersService: OrdersService
+		private readonly ordersService: OrdersService,
+		private readonly metricsService: MetricsService
 	) {}
 
 	async subscribe(
@@ -52,6 +54,7 @@ export class OrdersSseService {
 			this.clientStreams.set(orderId, new Set())
 		}
 		this.clientStreams.get(orderId)!.add(subject)
+		this.metricsService.incrementSseConnections()
 
 		this.logger.log(
 			`[SSE] Client ${userId} authorized and subscribed to Order: ${orderId} (Active listeners on this pod: ${this.clientStreams.get(orderId)!.size})`
@@ -76,6 +79,7 @@ export class OrdersSseService {
 
 		return subject.asObservable().pipe(
 			finalize(() => {
+				this.metricsService.decrementSseConnections()
 				const streamSet = this.clientStreams.get(orderId)
 				if (streamSet) {
 					streamSet.delete(subject)

@@ -14,7 +14,7 @@ import {
 	GetPaymentSessionResponse
 } from '@hermex/contracts'
 import { CorrelationId } from '@hermex/core'
-import { Public } from '@/modules/auth/decorators/public.decorator'
+import { Public } from '../auth/decorators/public.decorator'
 import {
 	ApiConfirmPayment,
 	ApiGetPaymentSession

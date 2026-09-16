@@ -18,7 +18,7 @@ import {
 	GetOrderResponse
 } from '@hermex/contracts'
 import { CorrelationId } from '@hermex/core'
-import { CurrentUserId } from '@/modules/auth/decorators/current-user-id.decorator'
+import { CurrentUserId } from '../auth/decorators/current-user-id.decorator'
 import { OrdersSseService } from '../events/orders-sse.service'
 import { ApiCreateOrder, ApiGetOrder, ApiStreamOrderLive } from './docs/orders.swagger'
 import { CreateOrderDto } from './dto/create-order.dto'

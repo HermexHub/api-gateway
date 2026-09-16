@@ -1,0 +1,34 @@
+name: hermex
+
+services:
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    restart: unless-stopped
+    ports:
+      - "${PORT:-4000}:4000"
+    environment:
+      PORT: 4000
+      NODE_ENV: ${NODE_ENV:-production}
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_USERNAME: ${DB_USERNAME:-hermex_admin}
+      DB_PASSWORD: ${DB_PASSWORD:-hermex_password}
+      DB_NAME: ${DB_NAME:-gateway_db}
+      DB_SYNCHRONIZE: ${DB_SYNCHRONIZE:-true}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-hermex-prod-access-secret-32chars}
+      JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-15m}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-hermex-prod-refresh-secret-32chars}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      ORDER_GRPC_URL: ${ORDER_GRPC_URL:-order-service:50051}
+      PAYMENT_GRPC_URL: ${PAYMENT_GRPC_URL:-payment-service:50052}
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://hermex_user:hermex_password@rabbitmq:5672}
+    networks:
+      - hermex-network
+
+networks:
+  hermex-network:
+    name: hermex-network
+    external: true

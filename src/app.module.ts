@@ -12,6 +12,7 @@ import { AuthModule } from './modules/auth/auth.module'
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard'
 import { EventsModule } from './modules/events/events.module'
 import { HealthModule } from './modules/health/health.module'
+import { MetricsModule } from './modules/metrics/metrics.module'
 import { OrdersModule } from './modules/orders/orders.module'
 import { PaymentsModule } from './modules/payments/payments.module'
 
@@ -33,6 +34,7 @@ import { PaymentsModule } from './modules/payments/payments.module'
 		}),
 		AuthModule,
 		HealthModule,
+		MetricsModule,
 		EventsModule,
 		OrdersModule,
 		PaymentsModule

@@ -14,7 +14,7 @@ export interface AppConfig {
 export default registerAs(
 	'app',
 	(): AppConfig => ({
-		port: Number(process.env.PORT),
+		port: Number(process.env.PORT)!,
 		nodeEnv: process.env.NODE_ENV!,
 		jwt: {
 			accessSecret: process.env.JWT_ACCESS_SECRET!,

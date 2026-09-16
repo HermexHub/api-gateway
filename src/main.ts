@@ -7,6 +7,7 @@ import { HermexLogger } from '@hermex/core'
 import { AppModule } from './app.module'
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter'
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
+import { MetricsService } from './modules/metrics/metrics.service'
 
 async function bootstrap() {
 	const hermexLogger = new HermexLogger({ serviceName: 'api-gateway' })
@@ -23,11 +24,13 @@ async function bootstrap() {
 	app.use(cookieParser())
 
 	app.setGlobalPrefix('api/v1', {
-		exclude: ['health', 'docs', 'docs/*path']
+		exclude: ['health', 'metrics', 'docs', 'docs/*path']
 	})
 
+	const metricsService = app.get(MetricsService)
+
 	app.useGlobalFilters(new GlobalExceptionFilter())
-	app.useGlobalInterceptors(new LoggingInterceptor())
+	app.useGlobalInterceptors(new LoggingInterceptor(metricsService))
 	app.useGlobalPipes(
 		new ValidationPipe({
 			whitelist: true,
