@@ -6,20 +6,22 @@ import {
 import { ConfigService } from '@nestjs/config'
 import { JwtService } from '@nestjs/jwt'
 import * as bcrypt from 'bcryptjs'
-import * as crypto from 'crypto'
 import { Response } from 'express'
-import { AuthResponse, JwtPayload, UserResponse } from './auth.interface'
+import {
+	AuthResponse,
+	JwtPayload,
+	RefreshTokenPayload,
+	UserResponse
+} from './auth.interface'
 import { LoginDto } from './dto/login.dto'
 import { RegisterDto } from './dto/register.dto'
 import { UserEntity } from './entities/user.entity'
-import { RefreshTokenRepository } from './repositories/refresh-token.repository'
 import { UserRepository } from './repositories/user.repository'
 
 @Injectable()
 export class AuthService {
 	constructor(
 		private readonly userRepository: UserRepository,
-		private readonly refreshTokenRepository: RefreshTokenRepository,
 		private readonly jwtService: JwtService,
 		private readonly configService: ConfigService
 	) {}
@@ -49,15 +51,7 @@ export class AuthService {
 			}
 		)
 
-		const { accessToken, refreshToken, expiresAt } =
-			await this.generateTokens(user)
-
-		const tokenHash = this.hashToken(refreshToken)
-		await this.refreshTokenRepository.createToken(
-			user.id,
-			tokenHash,
-			expiresAt
-		)
+		const { accessToken, refreshToken } = await this.generateTokens(user)
 
 		this.setRefreshTokenCookie(res, refreshToken)
 
@@ -83,15 +77,11 @@ export class AuthService {
 			throw new UnauthorizedException('Invalid email or password')
 		}
 
-		const { accessToken, refreshToken, expiresAt } =
-			await this.generateTokens(user)
+		// Invalidate any previously issued refresh tokens (Single Active Session)
+		await this.userRepository.incrementTokenVersion(user.id)
+		user.tokenVersion++
 
-		const tokenHash = this.hashToken(refreshToken)
-		await this.refreshTokenRepository.createToken(
-			user.id,
-			tokenHash,
-			expiresAt
-		)
+		const { accessToken, refreshToken } = await this.generateTokens(user)
 
 		this.setRefreshTokenCookie(res, refreshToken)
 
@@ -113,42 +103,31 @@ export class AuthService {
 			const refreshSecret = this.configService.get<string>(
 				'app.jwt.refreshSecret'
 			)
-			const payload = await this.jwtService.verifyAsync<JwtPayload>(
-				refreshToken,
-				{
-					secret: refreshSecret
-				}
-			)
-
-			const tokenHash = this.hashToken(refreshToken)
-			const validToken =
-				await this.refreshTokenRepository.findValidToken(
-					payload.sub,
-					tokenHash
+			const payload =
+				await this.jwtService.verifyAsync<RefreshTokenPayload>(
+					refreshToken,
+					{
+						secret: refreshSecret
+					}
 				)
-
-			if (!validToken) {
-				throw new UnauthorizedException(
-					'Invalid or revoked refresh token'
-				)
-			}
-
-			// Revoke previous token (Token rotation pattern)
-			await this.refreshTokenRepository.revokeToken(tokenHash)
 
 			const user = await this.userRepository.findById(payload.sub)
-			if (!user) {
-				throw new UnauthorizedException('User not found')
+			if (!user || !user.isActive) {
+				throw new UnauthorizedException('User not found or inactive')
 			}
 
-			const tokens = await this.generateTokens(user)
-			const newTokenHash = this.hashToken(tokens.refreshToken)
-			await this.refreshTokenRepository.createToken(
-				user.id,
-				newTokenHash,
-				tokens.expiresAt
-			)
+			// Validate token version against DB (Revocation / Session Check)
+			if (user.tokenVersion !== payload.tokenVersion) {
+				throw new UnauthorizedException(
+					'Session expired or revoked'
+				)
+			}
 
+			// Token rotation: increment token version and issue new tokens
+			await this.userRepository.incrementTokenVersion(user.id)
+			user.tokenVersion++
+
+			const tokens = await this.generateTokens(user)
 			this.setRefreshTokenCookie(res, tokens.refreshToken)
 
 			return {
@@ -162,11 +141,25 @@ export class AuthService {
 
 	async logout(
 		refreshToken: string | undefined,
+		userId: string | undefined,
 		res: Response
 	): Promise<{ message: string }> {
-		if (refreshToken) {
-			const tokenHash = this.hashToken(refreshToken)
-			await this.refreshTokenRepository.revokeToken(tokenHash)
+		if (userId) {
+			await this.userRepository.incrementTokenVersion(userId)
+		} else if (refreshToken) {
+			try {
+				const refreshSecret = this.configService.get<string>(
+					'app.jwt.refreshSecret'
+				)
+				const payload =
+					await this.jwtService.verifyAsync<RefreshTokenPayload>(
+						refreshToken,
+						{ secret: refreshSecret }
+					)
+				await this.userRepository.incrementTokenVersion(payload.sub)
+			} catch {
+				// Token was already invalid, continue with clearing cookie
+			}
 		}
 
 		res.clearCookie('refreshToken', {
@@ -181,11 +174,16 @@ export class AuthService {
 	}
 
 	private async generateTokens(user: UserEntity) {
-		const payload: JwtPayload = {
+		const accessPayload: JwtPayload = {
 			sub: user.id,
 			email: user.email,
 			role: user.role,
 			fullName: user.profile?.displayName
+		}
+
+		const refreshPayload: RefreshTokenPayload = {
+			...accessPayload,
+			tokenVersion: user.tokenVersion
 		}
 
 		const accessSecret = this.configService.get<string>(
@@ -202,19 +200,17 @@ export class AuthService {
 		)
 
 		const [accessToken, refreshToken] = await Promise.all([
-			this.jwtService.signAsync(payload, {
+			this.jwtService.signAsync(accessPayload, {
 				secret: accessSecret,
 				expiresIn: (accessExpiresIn || '15m') as any
 			}),
-			this.jwtService.signAsync(payload, {
+			this.jwtService.signAsync(refreshPayload, {
 				secret: refreshSecret,
 				expiresIn: (refreshExpiresIn || '7d') as any
 			})
 		])
 
-		const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-
-		return { accessToken, refreshToken, expiresAt }
+		return { accessToken, refreshToken }
 	}
 
 	private setRefreshTokenCookie(res: Response, refreshToken: string): void {
@@ -230,10 +226,6 @@ export class AuthService {
 		})
 	}
 
-	private hashToken(token: string): string {
-		return crypto.createHash('sha256').update(token).digest('hex')
-	}
-
 	private toUserResponse(user: UserEntity): UserResponse {
 		return {
 			id: user.id,
@@ -244,3 +236,4 @@ export class AuthService {
 		}
 	}
 }
+

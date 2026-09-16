@@ -2,12 +2,10 @@ import {
 	Column,
 	CreateDateColumn,
 	Entity,
-	OneToMany,
 	OneToOne,
 	PrimaryGeneratedColumn,
 	UpdateDateColumn
 } from 'typeorm'
-import { RefreshTokenEntity } from './refresh-token.entity'
 import { UserProfileEntity } from './user-profile.entity'
 
 @Entity('users')
@@ -24,6 +22,9 @@ export class UserEntity {
 	@Column({ type: 'varchar', length: 50, default: 'user' })
 	role!: string
 
+	@Column({ name: 'token_version', type: 'int', default: 1 })
+	tokenVersion!: number
+
 	@Column({ name: 'is_active', type: 'boolean', default: true })
 	isActive!: boolean
 
@@ -31,9 +32,6 @@ export class UserEntity {
 		cascade: true
 	})
 	profile?: UserProfileEntity
-
-	@OneToMany(() => RefreshTokenEntity, token => token.user)
-	refreshTokens?: RefreshTokenEntity[]
 
 	@CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
 	createdAt!: Date

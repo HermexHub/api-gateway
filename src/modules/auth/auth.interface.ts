@@ -5,6 +5,10 @@ export interface JwtPayload {
 	fullName?: string
 }
 
+export interface RefreshTokenPayload extends JwtPayload {
+	tokenVersion: number
+}
+
 export interface UserResponse {
 	id: string
 	email: string
@@ -17,3 +21,4 @@ export interface AuthResponse {
 	accessToken: string
 	user: UserResponse
 }
+

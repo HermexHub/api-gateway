@@ -3,11 +3,9 @@ import { JwtModule } from '@nestjs/jwt'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { AuthController } from './auth.controller'
 import { AuthService } from './auth.service'
-import { RefreshTokenEntity } from './entities/refresh-token.entity'
 import { UserProfileEntity } from './entities/user-profile.entity'
 import { UserEntity } from './entities/user.entity'
 import { JwtAuthGuard } from './guards/jwt-auth.guard'
-import { RefreshTokenRepository } from './repositories/refresh-token.repository'
 import { UserProfileRepository } from './repositories/user-profile.repository'
 import { UserRepository } from './repositories/user.repository'
 
@@ -15,8 +13,7 @@ import { UserRepository } from './repositories/user.repository'
 	imports: [
 		TypeOrmModule.forFeature([
 			UserEntity,
-			UserProfileEntity,
-			RefreshTokenEntity
+			UserProfileEntity
 		]),
 		JwtModule.register({})
 	],
@@ -25,16 +22,15 @@ import { UserRepository } from './repositories/user.repository'
 		AuthService,
 		JwtAuthGuard,
 		UserRepository,
-		UserProfileRepository,
-		RefreshTokenRepository
+		UserProfileRepository
 	],
 	exports: [
 		AuthService,
 		JwtAuthGuard,
 		UserRepository,
 		UserProfileRepository,
-		RefreshTokenRepository,
 		JwtModule
 	]
 })
 export class AuthModule {}
+

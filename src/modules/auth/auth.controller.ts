@@ -68,7 +68,9 @@ export class AuthController {
 		@Res({ passthrough: true }) res: Response
 	): Promise<{ message: string }> {
 		const refreshToken = req.cookies?.refreshToken
-		return this.authService.logout(refreshToken, res)
+		const userId = req.user?.sub
+		return this.authService.logout(refreshToken, userId, res)
 	}
 }
+
 

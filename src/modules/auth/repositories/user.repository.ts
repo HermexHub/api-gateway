@@ -57,4 +57,9 @@ export class UserRepository {
 
 		return this.repo.save(user)
 	}
+
+	async incrementTokenVersion(id: string): Promise<void> {
+		await this.repo.increment({ id }, 'tokenVersion', 1)
+	}
 }
+
