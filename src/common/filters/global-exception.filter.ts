@@ -12,7 +12,7 @@ import {
 	grpcStatusToHttpStatus,
 	isGrpcError
 } from '@hermex/contracts'
-import { X_CORRELATION_ID } from '../constants/headers.constant'
+import { X_CORRELATION_ID } from '@hermex/core'
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {

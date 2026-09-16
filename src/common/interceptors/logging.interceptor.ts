@@ -8,7 +8,7 @@ import {
 import { Request, Response } from 'express'
 import { Observable } from 'rxjs'
 import { tap } from 'rxjs/operators'
-import { X_CORRELATION_ID } from '../constants/headers.constant'
+import { X_CORRELATION_ID } from '@hermex/core'
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
