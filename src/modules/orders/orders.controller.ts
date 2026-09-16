@@ -13,7 +13,7 @@ import {
 	CreateOrderResponse,
 	GetOrderResponse
 } from '@hermex/contracts'
-import { CorrelationId } from '@/common/decorators/correlation-id.decorator'
+import { CorrelationId } from '@hermex/core'
 import { CurrentUserId } from '@/modules/auth/decorators/current-user-id.decorator'
 import { ApiCreateOrder, ApiGetOrder } from './docs/orders.swagger'
 import { CreateOrderDto } from './dto/create-order.dto'
