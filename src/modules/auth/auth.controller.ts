@@ -4,14 +4,13 @@ import {
 	HttpCode,
 	HttpStatus,
 	Post,
-	Req,
 	Res
 } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
-import { Request, Response } from 'express'
+import { Response } from 'express'
 import { AuthResponse } from './auth.interface'
 import { AuthService } from './auth.service'
-import { Public } from './decorators/public.decorator'
+import { Cookies, CurrentUserId, Public } from './decorators'
 import {
 	ApiLogin,
 	ApiLogout,
@@ -53,10 +52,9 @@ export class AuthController {
 	@HttpCode(HttpStatus.OK)
 	@ApiRefresh()
 	async refresh(
-		@Req() req: Request,
+		@Cookies('refreshToken') refreshToken: string | undefined,
 		@Res({ passthrough: true }) res: Response
 	): Promise<AuthResponse> {
-		const refreshToken = req.cookies?.refreshToken
 		return this.authService.refresh(refreshToken, res)
 	}
 
@@ -64,13 +62,13 @@ export class AuthController {
 	@HttpCode(HttpStatus.OK)
 	@ApiLogout()
 	async logout(
-		@Req() req: Request,
+		@CurrentUserId() userId: string,
+		@Cookies('refreshToken') refreshToken: string | undefined,
 		@Res({ passthrough: true }) res: Response
 	): Promise<{ message: string }> {
-		const refreshToken = req.cookies?.refreshToken
-		const userId = req.user?.sub
 		return this.authService.logout(refreshToken, userId, res)
 	}
 }
+
 
 

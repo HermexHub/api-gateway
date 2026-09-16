@@ -58,8 +58,20 @@ export class UserRepository {
 		return this.repo.save(user)
 	}
 
-	async incrementTokenVersion(id: string): Promise<void> {
-		await this.repo.increment({ id }, 'tokenVersion', 1)
+	async incrementTokenVersion(id: string): Promise<number> {
+		const result = await this.repo
+			.createQueryBuilder()
+			.update(UserEntity)
+			.set({
+				tokenVersion: () =>
+					'CASE WHEN token_version >= 2147483647 THEN 1 ELSE token_version + 1 END'
+			})
+			.where('id = :id', { id })
+			.returning('token_version')
+			.execute()
+
+		return Number(result.raw[0]?.token_version ?? 1)
 	}
 }
+
 

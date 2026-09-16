@@ -69,6 +69,10 @@ export class AuthService {
 			throw new UnauthorizedException('Invalid email or password')
 		}
 
+		if (!user.isActive) {
+			throw new UnauthorizedException('User account is deactivated')
+		}
+
 		const isPasswordValid = await bcrypt.compare(
 			dto.password,
 			user.passwordHash
@@ -78,8 +82,8 @@ export class AuthService {
 		}
 
 		// Invalidate any previously issued refresh tokens (Single Active Session)
-		await this.userRepository.incrementTokenVersion(user.id)
-		user.tokenVersion++
+		user.tokenVersion =
+			await this.userRepository.incrementTokenVersion(user.id)
 
 		const { accessToken, refreshToken } = await this.generateTokens(user)
 
@@ -124,8 +128,8 @@ export class AuthService {
 			}
 
 			// Token rotation: increment token version and issue new tokens
-			await this.userRepository.incrementTokenVersion(user.id)
-			user.tokenVersion++
+			user.tokenVersion =
+				await this.userRepository.incrementTokenVersion(user.id)
 
 			const tokens = await this.generateTokens(user)
 			this.setRefreshTokenCookie(res, tokens.refreshToken)
