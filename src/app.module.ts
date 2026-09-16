@@ -5,10 +5,12 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware'
 import appConfig from './config/app.config'
 import databaseConfig from './config/database.config'
+import rabbitmqConfig from './config/rabbitmq.config'
 import servicesConfig from './config/services.config'
 import { validateEnv } from './config/env.validation'
 import { AuthModule } from './modules/auth/auth.module'
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard'
+import { EventsModule } from './modules/events/events.module'
 import { HealthModule } from './modules/health/health.module'
 import { OrdersModule } from './modules/orders/orders.module'
 import { PaymentsModule } from './modules/payments/payments.module'
@@ -23,7 +25,7 @@ import { PaymentsModule } from './modules/payments/payments.module'
 				'.env'
 			],
 			validate: validateEnv,
-			load: [appConfig, databaseConfig, servicesConfig]
+			load: [appConfig, databaseConfig, servicesConfig, rabbitmqConfig]
 		}),
 		TypeOrmModule.forRootAsync({
 			inject: [ConfigService],
@@ -31,6 +33,7 @@ import { PaymentsModule } from './modules/payments/payments.module'
 		}),
 		AuthModule,
 		HealthModule,
+		EventsModule,
 		OrdersModule,
 		PaymentsModule
 	],

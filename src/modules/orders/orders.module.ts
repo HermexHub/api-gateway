@@ -1,10 +1,11 @@
-import { Module } from '@nestjs/common'
+import { Module, forwardRef } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { ClientsModule, Transport } from '@nestjs/microservices'
 import {
 	ORDER_PACKAGE_NAME,
 	ORDER_PROTO_PATH
 } from '@hermex/contracts'
+import { EventsModule } from '../events/events.module'
 import { ORDER_GRPC_CLIENT } from './orders.constants'
 import { OrdersController } from './orders.controller'
 import { OrdersService } from './orders.service'
@@ -25,7 +26,8 @@ import { OrdersService } from './orders.service'
 					}
 				})
 			}
-		])
+		]),
+		forwardRef(() => EventsModule)
 	],
 	controllers: [OrdersController],
 	providers: [OrdersService],

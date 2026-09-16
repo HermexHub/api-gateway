@@ -38,7 +38,7 @@ export class JwtAuthGuard implements CanActivate {
 		}
 
 		const request = context.switchToHttp().getRequest<Request>()
-		const token = this.extractTokenFromHeader(request)
+		const token = this.extractToken(request)
 
 		if (!token) {
 			throw new UnauthorizedException('Authentication token is missing')
@@ -63,9 +63,27 @@ export class JwtAuthGuard implements CanActivate {
 		return true
 	}
 
-	private extractTokenFromHeader(request: Request): string | undefined {
+	private extractToken(request: Request): string | undefined {
+		// 1. Authorization header (Bearer token)
 		const [type, token] =
 			request.headers.authorization?.split(' ') ?? []
-		return type === 'Bearer' ? token : undefined
+		if (type === 'Bearer' && token) {
+			return token
+		}
+
+		// 2. Cookie (accessToken)
+		if (request.cookies?.accessToken) {
+			return request.cookies.accessToken
+		}
+
+		// 3. Query param (?token=...) — fallback for browser EventSource SSE
+		if (
+			typeof request.query?.token === 'string' &&
+			request.query.token.trim()
+		) {
+			return request.query.token.trim()
+		}
+
+		return undefined
 	}
 }

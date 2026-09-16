@@ -3,6 +3,7 @@ import {
 	ApiBearerAuth,
 	ApiOperation,
 	ApiParam,
+	ApiQuery,
 	ApiResponse
 } from '@nestjs/swagger'
 
@@ -144,6 +145,46 @@ export function ApiGetOrder() {
 					error: 'UnauthorizedException'
 				}
 			}
+		})
+	)
+}
+
+export function ApiStreamOrderLive() {
+	return applyDecorators(
+		ApiBearerAuth(),
+		ApiOperation({
+			summary: 'Live Order Tracker stream (SSE)',
+			description:
+				'Establishes an authenticated Server-Sent Events (SSE) stream for continuous real-time order tracking (PENDING -> RESERVED -> CONFIRMED / CANCELLED). Requires JWT token (via Authorization Bearer header, accessToken cookie, or ?token= query parameter) and verifies order ownership (Anti-IDOR).'
+		}),
+		ApiParam({
+			name: 'id',
+			type: String,
+			description: 'Order UUID',
+			example: 'b782fcd8-38b8-4c91-9e23-74b6fa72d312'
+		}),
+		ApiQuery({
+			name: 'token',
+			required: false,
+			type: String,
+			description:
+				'Optional JWT access token query parameter for browser EventSource clients that cannot set Authorization headers'
+		}),
+		ApiResponse({
+			status: HttpStatus.OK,
+			description: 'SSE stream established (text/event-stream)'
+		}),
+		ApiResponse({
+			status: HttpStatus.UNAUTHORIZED,
+			description: 'Missing or expired authentication token (header, cookie, or query param)'
+		}),
+		ApiResponse({
+			status: HttpStatus.FORBIDDEN,
+			description: 'Access denied: You do not have permission to view this order (Anti-IDOR)'
+		}),
+		ApiResponse({
+			status: HttpStatus.NOT_FOUND,
+			description: 'Order with specified ID not found'
 		})
 	)
 }

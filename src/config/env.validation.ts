@@ -64,6 +64,10 @@ export class EnvironmentVariables {
 	@IsString()
 	@IsNotEmpty({ message: 'PAYMENT_GRPC_URL is required' })
 	PAYMENT_GRPC_URL!: string
+
+	@IsString()
+	@IsNotEmpty({ message: 'RABBITMQ_URL is required' })
+	RABBITMQ_URL!: string
 }
 
 export function validateEnv(
