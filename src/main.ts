@@ -58,6 +58,8 @@ async function bootstrap() {
 		}
 	})
 
+	app.enableShutdownHooks()
+
 	await app.listen(port)
 	logger.log(`🚀 API Gateway is running on: http://localhost:${port}`)
 	logger.log(`📚 Swagger documentation: http://localhost:${port}/docs`)
