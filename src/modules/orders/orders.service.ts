@@ -34,10 +34,15 @@ export class OrdersService implements OnModuleInit {
 			this.orderGrpcService.createOrder(
 				{
 					userId,
-					items: dto.items,
+					items: dto.items.map((item) => ({
+						productId: item.productId,
+						quantity: item.quantity,
+						price: item.price ?? 0
+					})),
 					deliveryAddress: dto.deliveryAddress
 				},
 				createGrpcMetadata(correlationId)
+
 			)
 		)
 	}

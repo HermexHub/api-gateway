@@ -24,7 +24,11 @@ services:
       JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
       ORDER_GRPC_URL: ${ORDER_GRPC_URL:-order-service:50051}
       PAYMENT_GRPC_URL: ${PAYMENT_GRPC_URL:-payment-service:50052}
+      INVENTORY_GRPC_URL: ${INVENTORY_GRPC_URL:-inventory-service:50053}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
       RABBITMQ_URL: ${RABBITMQ_URL:-amqp://hermex_user:hermex_password@rabbitmq:5672}
+
     networks:
       - hermex-network
 

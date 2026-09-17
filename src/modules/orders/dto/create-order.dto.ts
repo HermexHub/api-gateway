@@ -31,12 +31,15 @@ export class CreateOrderItemDto {
 
 	@ApiProperty({
 		example: 29.99,
-		description: 'Item unit price (must be positive)'
+		description: 'Item unit price (optional, authoritative price is resolved by backend)',
+		required: false
 	})
+	@IsOptional()
 	@IsNumber({}, { message: 'price must be a number' })
 	@IsPositive({ message: 'price must be greater than 0' })
-	price!: number
+	price?: number
 }
+
 
 export class CreateOrderDto {
 	@ApiProperty({

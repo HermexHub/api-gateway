@@ -2,7 +2,9 @@ import { Logger, ValidationPipe } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { NestFactory } from '@nestjs/core'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
+import compression from 'compression'
 import cookieParser from 'cookie-parser'
+import helmet from 'helmet'
 import { HermexLogger } from '@hermex/core'
 import { AppModule } from './app.module'
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter'
@@ -18,9 +20,17 @@ async function bootstrap() {
 	const logger = new Logger('Bootstrap')
 
 	const configService = app.get(ConfigService)
-	const port = configService.get<number>('app.port') || 4000
-	const nodeEnv = configService.get<string>('app.nodeEnv') || 'development'
+	const port = configService.get<number>('app.port')!
+	const nodeEnv = configService.get<string>('app.nodeEnv')!
 
+	// Perimeter Security & Hardening
+	app.use(
+		helmet({
+			contentSecurityPolicy: false,
+			crossOriginEmbedderPolicy: false
+		})
+	)
+	app.use(compression())
 	app.use(cookieParser())
 
 	app.setGlobalPrefix('api/v1', {
@@ -55,6 +65,8 @@ async function bootstrap() {
 		.setVersion('1.0')
 		.addBearerAuth()
 		.addTag('Authentication', 'User registration, login, token refresh and logout')
+		.addTag('Products', 'Product catalog querying with pagination and caching')
+		.addTag('Cart', 'Authoritative cart and stock validation')
 		.addTag('Orders', 'Order placement and tracking via gRPC Order Service')
 		.addTag('Health', 'Service health check and kubernetes probes')
 		.build()
@@ -75,3 +87,4 @@ async function bootstrap() {
 }
 
 bootstrap()
+

@@ -3,6 +3,7 @@ import {
 	IsEnum,
 	IsNotEmpty,
 	IsNumber,
+	IsOptional,
 	IsString,
 	validateSync
 } from 'class-validator'
@@ -66,9 +67,27 @@ export class EnvironmentVariables {
 	PAYMENT_GRPC_URL!: string
 
 	@IsString()
+	@IsNotEmpty({ message: 'INVENTORY_GRPC_URL is required' })
+	INVENTORY_GRPC_URL!: string
+
+	@IsString()
+	@IsNotEmpty({ message: 'REDIS_HOST is required' })
+	REDIS_HOST!: string
+
+	@IsNumber({}, { message: 'REDIS_PORT must be a number' })
+	@IsNotEmpty({ message: 'REDIS_PORT is required' })
+	REDIS_PORT!: number
+
+	@IsString()
+	@IsOptional()
+	REDIS_PASSWORD?: string
+
+
+	@IsString()
 	@IsNotEmpty({ message: 'RABBITMQ_URL is required' })
 	RABBITMQ_URL!: string
 }
+
 
 export function validateEnv(
 	config: Record<string, unknown>

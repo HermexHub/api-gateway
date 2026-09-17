@@ -15,6 +15,7 @@ import { HealthModule } from './modules/health/health.module'
 import { MetricsModule } from './modules/metrics/metrics.module'
 import { OrdersModule } from './modules/orders/orders.module'
 import { PaymentsModule } from './modules/payments/payments.module'
+import { ProductsModule } from './modules/products/products.module'
 
 @Module({
 	imports: [
@@ -37,8 +38,10 @@ import { PaymentsModule } from './modules/payments/payments.module'
 		MetricsModule,
 		EventsModule,
 		OrdersModule,
-		PaymentsModule
+		PaymentsModule,
+		ProductsModule
 	],
+
 	providers: [
 		{
 			provide: APP_GUARD,
