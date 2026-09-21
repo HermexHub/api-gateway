@@ -75,4 +75,30 @@ export class GetProductsQueryDto {
 		message: 'sortOrder must be ASC or DESC'
 	})
 	sortOrder: string = 'DESC'
+
+	@ApiPropertyOptional({
+		description: 'Filter products by category',
+		example: 'Laptops'
+	})
+	@IsOptional()
+	@IsString({ message: 'category must be a string' })
+	@MaxLength(100)
+	category?: string
+
+	@ApiPropertyOptional({
+		description: 'Filter products by manufacturer brand',
+		example: 'Apple'
+	})
+	@IsOptional()
+	@IsString({ message: 'brand must be a string' })
+	@MaxLength(100)
+	brand?: string
+
+	@ApiPropertyOptional({
+		description: 'Faceted specs filter as JSON string (e.g. {"ram":"32 GB"})',
+		example: '{"ram":"32 GB"}'
+	})
+	@IsOptional()
+	@IsString()
+	specs?: string
 }

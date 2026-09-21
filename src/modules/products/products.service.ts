@@ -54,7 +54,10 @@ export class ProductsService implements OnModuleInit {
 							inStockOnly: query.inStockOnly,
 							search: query.search,
 							sortBy: query.sortBy,
-							sortOrder: query.sortOrder
+							sortOrder: query.sortOrder,
+							category: query.category,
+							brand: query.brand,
+							specsFilterJson: query.specs
 						},
 						createGrpcMetadata(correlationId)
 					)
