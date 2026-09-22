@@ -19,6 +19,7 @@ import {
 } from '@hermex/contracts'
 import { CorrelationId } from '@hermex/core'
 import { CurrentUserId } from '../auth/decorators/current-user-id.decorator'
+import { Public } from '../auth/decorators/public.decorator'
 import { OrdersSseService } from '../events/orders-sse.service'
 import { ApiCreateOrder, ApiGetOrder, ApiStreamOrderLive } from './docs/orders.swagger'
 import { CreateOrderDto } from './dto/create-order.dto'
@@ -54,6 +55,7 @@ export class OrdersController {
 		)
 	}
 
+	@Public()
 	@Get(':id')
 	@ApiGetOrder()
 	async getOrder(
